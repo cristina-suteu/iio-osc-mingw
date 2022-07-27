@@ -15,16 +15,16 @@ LIBRSVG_VERSION=${LIBRSVG_VERSION_MAJOR}.7
 LIBFFI_VERSION=3.2.1
 LIBICONV_VERSION=1.15
 GETTEXT_VERSION=0.19.8.1
-GLIB_VERSION_MAJOR=2.53
-GLIB_VERSION=${GLIB_VERSION_MAJOR}.6
-ATK_VERSION_MAJOR=2.15
-ATK_VERSION=${ATK_VERSION_MAJOR}.4
-PANGO_VERSION_MAJOR=1.36
-PANGO_VERSION=${PANGO_VERSION_MAJOR}.8
-GDK_PIXBUF_VERSION_MAJOR=2.28
-GDK_PIXBUF_VERSION=${GDK_PIXBUF_VERSION_MAJOR}.2
-GTK_VERSION_MAJOR=2.24
-GTK_VERSION=${GTK_VERSION_MAJOR}.25
+GLIB_VERSION_MAJOR=2.57
+GLIB_VERSION=${GLIB_VERSION_MAJOR}.2
+ATK_VERSION_MAJOR=2.3
+ATK_VERSION=${ATK_VERSION_MAJOR}.0
+PANGO_VERSION_MAJOR=1.41
+PANGO_VERSION=${PANGO_VERSION_MAJOR}.0
+GDK_PIXBUF_VERSION_MAJOR=2.30
+GDK_PIXBUF_VERSION=${GDK_PIXBUF_VERSION_MAJOR}.0
+GTK_VERSION_MAJOR=3.24
+GTK_VERSION=${GTK_VERSION_MAJOR}.34
 LIBUSB_VERSION=1.0.21
 GTKDATABOX_VERSION=0.9.2.0
 CURL_VERSION=7.42.1
@@ -124,7 +124,7 @@ build_gettext () {
 	if [ ! -d gettext-${GETTEXT_VERSION} ] ; then
 		wget http://ftp.gnu.org/pub/gnu/gettext/gettext-${GETTEXT_VERSION}.tar.xz -O- |tar xJf -
 		cd ${CURDIR}/gettext-${GETTEXT_VERSION}
-		patch -p1 < ../gettext-no-tools.patch
+		#patch -p1 < ../gettext-no-tools.patch
 		autoreconf
 	else
 		cd ${CURDIR}/gettext-${GETTEXT_VERSION}
@@ -183,7 +183,7 @@ build_libjpeg () {
 # Build glib
 build_glib () {
 	cd ${CURDIR}
-	[ ! -d glib-${GLIB_VERSION} ] && wget http://ftp.gnome.org/pub/gnome/sources/glib/${GLIB_VERSION_MAJOR}/glib-${GLIB_VERSION}.tar.xz -O- |tar xJf -
+	#[ ! -d glib-${GLIB_VERSION} ] && wget http://ftp.gnome.org/pub/gnome/sources/glib/${GLIB_VERSION_MAJOR}/glib-${GLIB_VERSION}.tar.xz -O- |tar xJf -
 	cd ${CURDIR}/glib-${GLIB_VERSION}
 	./autogen.sh ${CONFIGURE_OPTS} --disable-gtk-doc --with-threads=win32 --with-pcre=internal --with-libiconv=gnu
 	make clean
@@ -440,40 +440,40 @@ handle_resources () {
 }
 
 main () {
-	delete_prev_build_artifact
-	git_submodule_update
+	#delete_prev_build_artifact
+	#git_submodule_update
 	cd ${CURDIR}
-	build_zlib
-	build_libiconv
-	build_libxml
-	build_gettext
-	build_libpng
-	build_libjpeg
-	build_dlfcn
-	build_libffi
+	#build_zlib
+	#build_libiconv
+	#build_libxml
+	#build_gettext
+	#build_libpng
+	#build_libjpeg
+	#build_dlfcn
+	#build_libffi
 	build_glib
-	build_pixman
-	build_cairo
-	build_atk
-	build_pango
-	build_gdk-pixbuf
-	build_libcroco
-	build_librsvg
-	build_gtk2
-	build_libserialport
-	build_libusb
-	build_libiio
-	build_libad9361
-	build_libad9166
-	build_matio
-	build_fftw3
-	build_gtkdatabox
-	copy_remaining_dlls
-	build_curl
-	build_jansson
+	#build_pixman
+	#build_cairo
+	#build_atk
+	#build_pango
+	#build_gdk-pixbuf
+	#build_libcroco
+	#build_librsvg
+	#build_gtk2
+	#build_libserialport
+	#build_libusb
+	#build_libiio
+	#build_libad9361
+	#build_libad9166
+	#build_matio
+	#build_fftw3
+	#build_gtkdatabox
+	#copy_remaining_dlls
+	#build_curl
+	#build_jansson
 	#remove_garbage
-	handle_resources
-	strip
+	#handle_resources
+	#strip
 
 	echo "Build complete."
 }
