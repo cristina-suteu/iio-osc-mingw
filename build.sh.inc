@@ -15,18 +15,18 @@ LIBRSVG_VERSION=${LIBRSVG_VERSION_MAJOR}.7
 LIBFFI_VERSION=3.2.1
 LIBICONV_VERSION=1.15
 GETTEXT_VERSION=0.19.8.1
-GLIB_VERSION_MAJOR=2.57
+GLIB_VERSION_MAJOR=2.58
 GLIB_VERSION=${GLIB_VERSION_MAJOR}.2
-ATK_VERSION_MAJOR=2.3
+ATK_VERSION_MAJOR=2.30
 ATK_VERSION=${ATK_VERSION_MAJOR}.0
 PANGO_VERSION_MAJOR=1.41
-PANGO_VERSION=${PANGO_VERSION_MAJOR}.0
+PANGO_VERSION=${PANGO_VERSION_MAJOR}.1
 GDK_PIXBUF_VERSION_MAJOR=2.30
 GDK_PIXBUF_VERSION=${GDK_PIXBUF_VERSION_MAJOR}.0
 GTK_VERSION_MAJOR=3.24
 GTK_VERSION=${GTK_VERSION_MAJOR}.34
 LIBUSB_VERSION=1.0.21
-GTKDATABOX_VERSION=0.9.2.0
+GTKDATABOX_VERSION=1.0.0.0
 CURL_VERSION=7.42.1
 JANSSON_VERSION=2.7
 
@@ -42,6 +42,8 @@ set -xe
 export SYSROOT=${CURDIR}/sysroot-${MINGW_VERSION}/
 export HOST=${MINGW_VERSION}-w64-mingw32
 INSTALL_PREFIX=/usr
+
+export MESON=/home/glib/iio-osc-mingw/meson-0.61.0/meson.py
 
 CONFIGURE_OPTS="--prefix=${INSTALL_PREFIX} --host=${HOST} --with-sysroot=${SYSROOT} --disable-dependency-tracking --enable-silent-rules --disable-static --disable-option-checking"
 
@@ -183,7 +185,7 @@ build_libjpeg () {
 # Build glib
 build_glib () {
 	cd ${CURDIR}
-	#[ ! -d glib-${GLIB_VERSION} ] && wget http://ftp.gnome.org/pub/gnome/sources/glib/${GLIB_VERSION_MAJOR}/glib-${GLIB_VERSION}.tar.xz -O- |tar xJf -
+	[ ! -d glib-${GLIB_VERSION} ] && wget http://ftp.gnome.org/pub/gnome/sources/glib/${GLIB_VERSION_MAJOR}/glib-${GLIB_VERSION}.tar.xz -O- |tar xJf -
 	cd ${CURDIR}/glib-${GLIB_VERSION}
 	./autogen.sh ${CONFIGURE_OPTS} --disable-gtk-doc --with-threads=win32 --with-pcre=internal --with-libiconv=gnu
 	make clean
@@ -219,10 +221,18 @@ build_atk () {
 	cd ${CURDIR}
 	[ ! -d atk-${ATK_VERSION} ] && wget http://ftp.gnome.org/pub/gnome/sources/atk/${ATK_VERSION_MAJOR}/atk-${ATK_VERSION}.tar.xz -O- |tar xJf -
 	cd ${CURDIR}/atk-${ATK_VERSION}
-	./configure ${CONFIGURE_OPTS}
-	make clean
-	make ${MAKE_J}
-	make install
+	$MESON setup --cross-file ../x86_64-w64-mingw32.txt build-mingw
+	$MESON compile -C build-mingw
+	#make clean
+	#make ${MAKE_J}
+	#make install
+}
+
+# Build Fribidi
+build_fribidi() {
+	cd ${CURDIR}
+        [ ! -d fribidi-${PANGO_VERSION} ] && wget https://github.com/fribidi/fribidi/archive/refs/tags/0.19.7.tar.gz -O- |tar xJf -
+
 }
 
 # Build Pango
@@ -231,10 +241,12 @@ build_pango () {
 	[ ! -d pango-${PANGO_VERSION} ] && wget http://ftp.gnome.org/pub/gnome/sources/pango/${PANGO_VERSION_MAJOR}/pango-${PANGO_VERSION}.tar.xz -O- |tar xJf -
 	cd ${CURDIR}/pango-${PANGO_VERSION}
 	./configure ${CONFIGURE_OPTS} --with-included-modules=basic-win32 --with-dynamic-modules=no \
-		--enable-debug=yes --disable-gtk-doc --without-x
+	--enable-debug=no --disable-gtk-doc --without-x --enable-introspection=no 
 	make clean
 	make ${MAKE_J}
 	make install
+	#$MESON setup --cross-file ../x86_64-w64-mingw32.txt build-mingw
+	#$MESON compile -C build-mingw
 }
 
 # Build gdk-pixbuf
@@ -372,7 +384,7 @@ build_gtkdatabox () {
 	if [ ! -d gtkdatabox-${GTKDATABOX_VERSION} ] ; then
 		wget http://sourceforge.net/projects/gtkdatabox/files/gtkdatabox/${GTKDATABOX_VERSION}/gtkdatabox-${GTKDATABOX_VERSION}.tar.gz -O- |tar xzf -
 		cd gtkdatabox-${GTKDATABOX_VERSION}
-		patch -p1 < ../gtkdatabox-${GTKDATABOX_VERSION}.patch
+		#patch -p1 < ../gtkdatabox-${GTKDATABOX_VERSION}.patch
 	else
 		cd gtkdatabox-${GTKDATABOX_VERSION}
 	fi
@@ -451,29 +463,29 @@ main () {
 	#build_libjpeg
 	#build_dlfcn
 	#build_libffi
-	build_glib
+	#build_glib
 	#build_pixman
 	#build_cairo
 	#build_atk
-	#build_pango
-	#build_gdk-pixbuf
-	#build_libcroco
-	#build_librsvg
-	#build_gtk2
-	#build_libserialport
-	#build_libusb
-	#build_libiio
-	#build_libad9361
-	#build_libad9166
-	#build_matio
-	#build_fftw3
-	#build_gtkdatabox
-	#copy_remaining_dlls
-	#build_curl
-	#build_jansson
-	#remove_garbage
-	#handle_resources
-	#strip
+	build_pango
+	build_gdk-pixbuf
+	build_libcroco
+	build_librsvg
+	build_gtk2
+	build_libserialport
+	build_libusb
+	build_libiio
+	build_libad9361
+	build_libad9166
+	build_matio
+	build_fftw3
+	build_gtkdatabox
+	copy_remaining_dlls
+	build_curl
+	build_jansson
+	remove_garbage
+	handle_resources
+	strip
 
 	echo "Build complete."
 }
