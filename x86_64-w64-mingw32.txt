@@ -8,7 +8,8 @@ windres = 'x86_64-w64-mingw32-windres'
 
 [properties]
 root = '/usr'
-sys_root = '/home/glib/iio-osc-mingw/sysroot-x86_64'
+sys_root = '/home/test/iio-osc-mingw/sysroot-x86_64'
+prefix =  '/home/test/iio-osc-mingw/sysroot-x86_64/usr'
 
 
 [host_machine]

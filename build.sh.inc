@@ -6,8 +6,9 @@ GCC_VERSION=7.3-win32
 ZLIB_VERSION=1.2.8
 LIBPNG_VERSION=1.5.21
 LIBJPEG_VERSION=9a
-PIXMAN_VERSION=0.32.6
-CAIRO_VERSION=1.14.0
+PIXMAN_VERSION=0.36.0
+CAIRO_VERSION_MAJOR=1.17
+CAIRO_VERSION=${CAIRO_VERSION_MAJOR}.6
 LIBCROCO_VERSION_MAJOR=0.6
 LIBCROCO_VERSION=${LIBCROCO_VERSION_MAJOR}.8
 LIBRSVG_VERSION_MAJOR=2.40
@@ -16,12 +17,13 @@ LIBFFI_VERSION=3.2.1
 LIBICONV_VERSION=1.15
 GETTEXT_VERSION=0.19.8.1
 GLIB_VERSION_MAJOR=2.58
-GLIB_VERSION=${GLIB_VERSION_MAJOR}.2
-ATK_VERSION_MAJOR=2.30
-ATK_VERSION=${ATK_VERSION_MAJOR}.0
-PANGO_VERSION_MAJOR=1.41
-PANGO_VERSION=${PANGO_VERSION_MAJOR}.1
-GDK_PIXBUF_VERSION_MAJOR=2.30
+GLIB_VERSION=${GLIB_VERSION_MAJOR}.3
+ATK_VERSION_MAJOR=2.35
+ATK_VERSION=${ATK_VERSION_MAJOR}.1
+FRIBIDI_VERSION=0.19.7
+PANGO_VERSION_MAJOR=1.43
+PANGO_VERSION=${PANGO_VERSION_MAJOR}.0
+GDK_PIXBUF_VERSION_MAJOR=2.40
 GDK_PIXBUF_VERSION=${GDK_PIXBUF_VERSION_MAJOR}.0
 GTK_VERSION_MAJOR=3.24
 GTK_VERSION=${GTK_VERSION_MAJOR}.34
@@ -43,16 +45,17 @@ export SYSROOT=${CURDIR}/sysroot-${MINGW_VERSION}/
 export HOST=${MINGW_VERSION}-w64-mingw32
 INSTALL_PREFIX=/usr
 
-export MESON=/home/glib/iio-osc-mingw/meson-0.61.0/meson.py
+export MESON=/home/test/iio-osc-mingw/meson-0.61.0/meson.py
 
 CONFIGURE_OPTS="--prefix=${INSTALL_PREFIX} --host=${HOST} --with-sysroot=${SYSROOT} --disable-dependency-tracking --enable-silent-rules --disable-static --disable-option-checking"
 
 export PKG_CONFIG_SYSROOT_DIR="${SYSROOT}"
-export PKG_CONFIG_LIBDIR="${SYSROOT}/usr/lib/pkgconfig:${SYSROOT}/usr/share/pkgconfig"
+export PKG_CONFIG_LIBDIR="${SYSROOT}/usr/local/lib/pkgconfig:${SYSROOT}/usr/lib/pkgconfig:${SYSROOT}/usr/share/pkgconfig"
 
 # Debian's mingw32 toolchain is not sysroot-aware...
-export CPPFLAGS="-I${SYSROOT}/${INSTALL_PREFIX}/include"
-export LDFLAGS="-L${SYSROOT}/${INSTALL_PREFIX}/lib"
+export CPPFLAGS="-I${SYSROOT}/${INSTALL_PREFIX}/include "
+export LDFLAGS="-L${SYSROOT}/${INSTALL_PREFIX}/lib -L${SYSROOT}/${INSTALL_PREFIX}/bin "
+#export LDFLAGS="-L${SYSROOT}/${INSTALL_PREFIX}/bin"
 #export CFLAGS="-g -ggdb -std=gnu89"
 export DESTDIR=${SYSROOT}/
 # Required for globbing
@@ -126,7 +129,7 @@ build_gettext () {
 	if [ ! -d gettext-${GETTEXT_VERSION} ] ; then
 		wget http://ftp.gnu.org/pub/gnu/gettext/gettext-${GETTEXT_VERSION}.tar.xz -O- |tar xJf -
 		cd ${CURDIR}/gettext-${GETTEXT_VERSION}
-		#patch -p1 < ../gettext-no-tools.patch
+		patch -p1 < ../gettext-no-tools.patch
 		autoreconf
 	else
 		cd ${CURDIR}/gettext-${GETTEXT_VERSION}
@@ -207,10 +210,11 @@ build_pixman () {
 # Build Cairo
 build_cairo () {
 	cd ${CURDIR}
-	[ ! -d cairo-${CAIRO_VERSION} ] && wget http://cairographics.org/releases/cairo-${CAIRO_VERSION}.tar.xz -O- |tar xJf -
+	[ ! -d cairo-${CAIRO_VERSION} ] && \
+	wget https://download.gnome.org/sources/cairo/${CAIRO_VERSION_MAJOR}/cairo-${CAIRO_VERSION}.tar.xz -O- | tar xJf -
 	cd ${CURDIR}/cairo-${CAIRO_VERSION}
 	ax_cv_c_float_words_bigendian=no png_LIBS="-lpng15 -lz" \
-		./configure ${CONFIGURE_OPTS} --enable-ft=no --enable-fc=no --enable-pthread=yes
+		./configure ${CONFIGURE_OPTS} --enable-ft=no --enable-fc=no --enable-pthread=yes --enable-test-suite=no
 	make clean
 	make ${MAKE_J}
 	make install
@@ -223,6 +227,9 @@ build_atk () {
 	cd ${CURDIR}/atk-${ATK_VERSION}
 	$MESON setup --cross-file ../x86_64-w64-mingw32.txt build-mingw
 	$MESON compile -C build-mingw
+	$MESON install -C build-mingw
+
+	#./configure ${CONFIGURE_OPTS}	
 	#make clean
 	#make ${MAKE_J}
 	#make install
@@ -231,8 +238,14 @@ build_atk () {
 # Build Fribidi
 build_fribidi() {
 	cd ${CURDIR}
-        [ ! -d fribidi-${PANGO_VERSION} ] && wget https://github.com/fribidi/fribidi/archive/refs/tags/0.19.7.tar.gz -O- |tar xJf -
+        [ ! -d fribidi-${FRIBIDI_VERSION} ] && wget https://github.com/fribidi/fribidi/archive/refs/tags/${FRIBIDI_VERSION}.tar.gz -O- |tar xzf -
+	cd ${CURDIR}/fribidi-${FRIBIDI_VERSION}
+	./bootstrap
 
+	./configure ${CONFIGURE_OPTS} --disable-test
+	make clean
+        make ${MAKE_J}
+        make install
 }
 
 # Build Pango
@@ -240,13 +253,13 @@ build_pango () {
 	cd ${CURDIR}
 	[ ! -d pango-${PANGO_VERSION} ] && wget http://ftp.gnome.org/pub/gnome/sources/pango/${PANGO_VERSION_MAJOR}/pango-${PANGO_VERSION}.tar.xz -O- |tar xJf -
 	cd ${CURDIR}/pango-${PANGO_VERSION}
-	./configure ${CONFIGURE_OPTS} --with-included-modules=basic-win32 --with-dynamic-modules=no \
-	--enable-debug=no --disable-gtk-doc --without-x --enable-introspection=no 
-	make clean
-	make ${MAKE_J}
-	make install
-	#$MESON setup --cross-file ../x86_64-w64-mingw32.txt build-mingw
-	#$MESON compile -C build-mingw
+	#	./configure ${CONFIGURE_OPTS} --with-included-modules=basic-win32 --with-dynamic-modules=no --enable-debug=no --disable-gtk-doc --without-x --enable-introspection=no --enable-shared --enable-installed-tests=no
+	#make clean
+	#make ${MAKE_J}
+	#make install
+	$MESON setup --cross-file ../x86_64-w64-mingw32.txt build-mingw
+	$MESON compile -C build-mingw
+	$MESON install -C build-mingw
 }
 
 # Build gdk-pixbuf
@@ -254,13 +267,17 @@ build_gdk-pixbuf () {
 	cd ${CURDIR}
 	[ ! -d gdk-pixbuf-${GDK_PIXBUF_VERSION} ] && wget http://ftp.gnome.org/pub/gnome/sources/gdk-pixbuf/${GDK_PIXBUF_VERSION_MAJOR}/gdk-pixbuf-${GDK_PIXBUF_VERSION}.tar.xz -O- |tar xJf -
 	cd ${CURDIR}/gdk-pixbuf-${GDK_PIXBUF_VERSION}
-	[ ${MINGW_VERSION} = "i686" ] && sudo ln -sf /usr/lib/i386-linux-gnu/gdk-pixbuf-2.0/gdk-pixbuf-query-loaders /usr/local/bin/gdk-pixbuf-query-loaders
-	[ ${MINGW_VERSION} = "x86_64" ] && sudo ln -sf /usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/gdk-pixbuf-query-loaders /usr/local/bin/gdk-pixbuf-query-loaders
-	./configure ${CONFIGURE_OPTS} --without-gdiplus --with-included-loaders=png,jpeg \
-		--disable-rpath --without-libtiff --enable-debug=yes --enable-modules
-	make clean
-	make ${MAKE_J}
-	make install
+	#[ ${MINGW_VERSION} = "i686" ] && sudo ln -sf /usr/lib/i386-linux-gnu/gdk-pixbuf-2.0/gdk-pixbuf-query-loaders /usr/local/bin/gdk-pixbuf-query-loaders
+	#[ ${MINGW_VERSION} = "x86_64" ] && sudo ln -sf /usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/gdk-pixbuf-query-loaders /usr/local/bin/gdk-pixbuf-query-loaders
+	#./configure ${CONFIGURE_OPTS} --without-gdiplus --with-included-loaders=png,jpeg \
+	#	--disable-rpath --without-libtiff --enable-debug=yes --enable-modules
+	#make clean
+	#make ${MAKE_J}
+	#make install
+	$MESON setup --cross-file ../x86_64-w64-mingw32.txt build-mingw
+	$MESON compile -C build-mingw
+	$MESON install -C build-mingw
+
 }
 
 
@@ -287,22 +304,37 @@ build_libcroco () {
 	cp ${CURDIR}/loaders.cache ${SYSROOT}/${INSTALL_PREFIX}/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache
 }
 
+build_epoxy () {
+
+	cd ${CURDIR}
+	wget https://github.com/anholt/libepoxy/archive/refs/tags/1.5.10.tar.gz 
+	tar xvf 1.5.10.tar.gz
+	cd libepoxy-1.5.10 
+
+	$MESON setup --cross-file ../x86_64-w64-mingw32.txt build-mingw
+	$MESON compile -C build-mingw
+	$MESON install -C build-mingw
+
+}
 # Build GTK2
 build_gtk2 () {
 	cd ${CURDIR}
 	if [ ! -d gtk+-${GTK_VERSION} ] ; then
 		wget http://ftp.gnome.org/pub/gnome/sources/gtk+/${GTK_VERSION_MAJOR}/gtk+-${GTK_VERSION}.tar.xz -O- |tar xJf -
 		cd ${CURDIR}/gtk+-${GTK_VERSION}
-		patch -p1 < ../gtk+-${GTK_VERSION}.patch
+		#		patch -p1 < ../gtk+-${GTK_VERSION}.patch
 	else
-		cd ${CURDIR}/gtk+-${GTK_VERSION}
+		cd ${CURDIR}/gtk
 	fi
-	./configure ${CONFIGURE_OPTS} --disable-cups --disable-papi --enable-debug \
-		--disable-rebuilds --with-gdktarget=win32 \
-		--with-included-immodules=ime --disable-modules
-	make clean
-	make ${MAKE_J}
-	make install
+	#	CPPFLAGS="$CPPFLAGS -DWINVER=0x0601"	./configure ${CONFIGURE_OPTS} --disable-cups --disable-papi --enable-debug \
+	#	--disable-rebuilds \
+	#		--with-included-immodules=ime --disable-modules --disable-nls --enable-win32-backend
+	#make clean
+	#make ${MAKE_J}
+	#make install
+	$MESON setup --cross-file ../x86_64-w64-mingw32.txt build-mingw
+	$MESON compile -C build-mingw
+	$MESON install -C build-mingw
 }
 
 # Build libserialport
@@ -454,7 +486,7 @@ handle_resources () {
 main () {
 	#delete_prev_build_artifact
 	#git_submodule_update
-	cd ${CURDIR}
+	#cd ${CURDIR}
 	#build_zlib
 	#build_libiconv
 	#build_libxml
@@ -467,10 +499,13 @@ main () {
 	#build_pixman
 	#build_cairo
 	#build_atk
-	build_pango
-	build_gdk-pixbuf
-	build_libcroco
-	build_librsvg
+	#build_pango
+	#build_gdk-pixbuf
+	#build_libcroco
+	#build_librsvg
+	#export 
+	#echo $PKG_CONFIG_PATH
+	#build_epoxy
 	build_gtk2
 	build_libserialport
 	build_libusb
