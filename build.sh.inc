@@ -321,20 +321,17 @@ build_gtk2 () {
 	cd ${CURDIR}
 	if [ ! -d gtk+-${GTK_VERSION} ] ; then
 		wget http://ftp.gnome.org/pub/gnome/sources/gtk+/${GTK_VERSION_MAJOR}/gtk+-${GTK_VERSION}.tar.xz -O- |tar xJf -
-		cd ${CURDIR}/gtk+-${GTK_VERSION}
-		#		patch -p1 < ../gtk+-${GTK_VERSION}.patch
-	else
-		cd ${CURDIR}/gtk
 	fi
-	#	CPPFLAGS="$CPPFLAGS -DWINVER=0x0601"	./configure ${CONFIGURE_OPTS} --disable-cups --disable-papi --enable-debug \
-	#	--disable-rebuilds \
-	#		--with-included-immodules=ime --disable-modules --disable-nls --enable-win32-backend
-	#make clean
-	#make ${MAKE_J}
-	#make install
-	$MESON setup --cross-file ../x86_64-w64-mingw32.txt build-mingw
-	$MESON compile -C build-mingw
-	$MESON install -C build-mingw
+		cd ${CURDIR}/gtk+-${GTK_VERSION}
+		CPPFLAGS="$CPPFLAGS -DWINVER=0x0601"	./configure ${CONFIGURE_OPTS} --disable-cups --disable-papi --enable-debug \
+		--disable-rebuilds \
+			--with-included-immodules=ime --disable-modules --disable-nls --enable-win32-backend
+	make clean
+	make ${MAKE_J}
+	make install
+	#$MESON setup --cross-file ../x86_64-w64-mingw32.txt build-mingw
+	#$MESON compile -C build-mingw
+	#$MESON install -C build-mingw
 }
 
 # Build libserialport
@@ -484,28 +481,28 @@ handle_resources () {
 }
 
 main () {
-	#delete_prev_build_artifact
-	#git_submodule_update
-	#cd ${CURDIR}
-	#build_zlib
-	#build_libiconv
-	#build_libxml
-	#build_gettext
-	#build_libpng
-	#build_libjpeg
-	#build_dlfcn
-	#build_libffi
-	#build_glib
-	#build_pixman
-	#build_cairo
-	#build_atk
-	#build_pango
-	#build_gdk-pixbuf
-	#build_libcroco
-	#build_librsvg
-	#export 
-	#echo $PKG_CONFIG_PATH
-	#build_epoxy
+	delete_prev_build_artifact
+	git_submodule_update
+	cd ${CURDIR}
+	build_zlib
+	build_libiconv
+	build_libxml
+	build_gettext
+	build_libpng
+	build_libjpeg
+	build_dlfcn
+	build_libffi
+	build_glib
+	build_pixman
+	build_cairo
+	build_atk
+	build_pango
+	build_gdk-pixbuf
+	build_libcroco
+	build_librsvg
+	export 
+	echo $PKG_CONFIG_PATH
+	build_epoxy
 	build_gtk2
 	build_libserialport
 	build_libusb
