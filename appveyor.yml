@@ -15,7 +15,8 @@ test: off
 
 init:
   - sudo apt-get update --fix-missing
-  - sudo apt-get -y install git cmake gcc-mingw-w64 g++-mingw-w64 autoconf libtool pkg-config libglib2.0-dev gnome-common gtk-doc-tools libgtk2.0-dev ocaml ocamlbuild fig2dev texinfo
+  - sudo apt-get -y install git cmake gcc-mingw-w64 g++-mingw-w64 autoconf libtool pkg-config libglib2.0-dev gnome-common gtk-doc-tools libgtk-3-dev ocaml ocamlbuild fig2dev texinfo ninja-build python3 python3-pip cargo
+  - pip3 install setuptools
 
 build_script:
   - ./build.sh ${MINGW_VERSION}

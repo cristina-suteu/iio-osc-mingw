@@ -1,6 +1,7 @@
 atk-*
 cairo-*
 curl-*
+fftw-*
 gdk-pixbuf-*
 gettext-*[!patch]
 glib-*
@@ -9,11 +10,13 @@ gtkdatabox-*[!patch]
 jansson-*
 jpeg-*
 libcroco-*
+libepoxy-*
 libffi-*
 libiconv-*
 libpng-*
 librsvg-*
 libusb-*
+meson-*
 pango-*
 pixman-*
 sysroot-*

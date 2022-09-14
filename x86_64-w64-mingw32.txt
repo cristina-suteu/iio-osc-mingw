@@ -2,9 +2,12 @@
 c = 'x86_64-w64-mingw32-gcc'
 cpp = 'x86_64-w64-mingw32-g++'
 ar = 'x86_64-w64-mingw32-ar'
+cmake = '/usr/bin/cmake'
 strip = 'x86_64-w64-mingw32-strip'
 pkgconfig= 'pkg-config'
 windres = 'x86_64-w64-mingw32-windres'
+python = '/usr/bin/python3'
+python3 = '/usr/bin/python3'
 
 [properties]
 root = '/usr'
